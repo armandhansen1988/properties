@@ -1,0 +1,8 @@
+.prop_hover:hover {
+	background: #FFF;
+}
+
+#map {
+	height: 300px;
+	width: 100%;
+}
