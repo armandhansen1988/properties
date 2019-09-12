@@ -65,46 +65,75 @@
 		$exCoor 				= explode(", ", $coordinates);
 		$lat 					= $exCoor[0];
 		$lng 					= $exCoor[1];
+		$valid_ext				= array("jpg", "jpeg", "png");
 		
 		if($action_type == "add"){
 			$unix_time 		= time();
 			$image_url 		= "uploads/".time()."_".$image;
-			$thumbnail_url 	= "uploads/thumb_".time()."_".$image;
-			move_uploaded_file($_FILES['image']['tmp_name'], $image_url);
-			generateThumbnail($image_url, $thumbnail_url, 100, 40);
-			$save = DBC::dbsql("INSERT INTO properties SET 	uuid = '$token',
-															county = '$county',
-															country = '$country',
-															town = '$town',
-															postcode = '$postcode',
-															description = '$description',
-															displayable_address = '$displayable_address',
-															image_url = '$image_url',
-															thumbnail_url = '$thumbnail_url',
-															latitude = '$lat',
-															longitude = '$lng',
-															num_bedrooms = '$num_bedrooms',
-															num_bathrooms = '$num_bathrooms',
-															price = '$price',
-															property_type_id = '$property_type',
-															sale_type = '$sale_type',
-															created_at = NOW(),
-															status = '1';");
-			if($save){
-				$error = 1;
-			}else{
+			$image_url_ext	= strtolower(pathinfo($image_url, PATHINFO_EXTENSION));
+			if(!in_array($image_url_ext, $valid_ext)){
 				$error = 2;
+				$error_msg = "Image can only be jpg, jpeg, or png!";
+			}else{
+				$thumbnail_url 	= "uploads/thumb_".time()."_".$image;
+				move_uploaded_file($_FILES['image']['tmp_name'], $image_url);
+				generateThumbnail($image_url, $thumbnail_url, 100, 40);
+				$save = DBC::dbsql("INSERT INTO properties SET 	uuid = '$token',
+																county = '$county',
+																country = '$country',
+																town = '$town',
+																postcode = '$postcode',
+																description = '$description',
+																displayable_address = '$displayable_address',
+																image_url = '$image_url',
+																thumbnail_url = '$thumbnail_url',
+																latitude = '$lat',
+																longitude = '$lng',
+																num_bedrooms = '$num_bedrooms',
+																num_bathrooms = '$num_bathrooms',
+																price = '$price',
+																property_type_id = '$property_type',
+																sale_type = '$sale_type',
+																created_at = NOW(),
+																status = '1';");
+				if($save){
+					$error = 1;
+					$error_msg = "Property added successfully";
+					
+					unset($town);
+					unset($county);
+					unset($country);
+					unset($postcode);
+					unset($displayable_address);
+					unset($coordinates);
+					unset($description);
+					unset($num_bedrooms);
+					unset($num_bathrooms);
+					unset($price);
+					unset($property_type);
+					unset($sale_type);
+					$type = "add";
+				}else{
+					$error = 2;
+					$error_msg = "Error saving property. Please try again";
+				}
 			}
 		}elseif($action_type == "edit"){
 			if($image != ""){
 				$unix_time		= time();
 				$image_url 		= "uploads/".time()."_".$image;
 				$thumbnail_url 	= "uploads/thumb_".time()."_".$image;
-				move_uploaded_file($_FILES['image']['tmp_name'], $image_url);
-				generateThumbnail($image_url, $thumbnail_url, 100, 40);
-				DBC::dbsql("UPDATE properties SET 	image_url = '$image_url',
-													thumbnail_url = '$thumbnail_url'
-													WHERE uuid = '$uuid';");
+				$image_url_ext	= strtolower(pathinfo($image_url, PATHINFO_EXTENSION));
+				if(!in_array($image_url_ext, $valid_ext)){
+					$error = 2;
+					$error_msg = "Image can only be jpg, jpeg, or png!";
+				}else{
+					move_uploaded_file($_FILES['image']['tmp_name'], $image_url);
+					generateThumbnail($image_url, $thumbnail_url, 100, 40);
+					DBC::dbsql("UPDATE properties SET 	image_url = '$image_url',
+														thumbnail_url = '$thumbnail_url'
+														WHERE uuid = '$uuid';");
+				}
 			}
 			
 			$update = DBC::dbsql("UPDATE properties SET county = '$county',
@@ -125,23 +154,24 @@
 														WHERE uuid = '$uuid';");
 			if($update){
 				$error = 1;
+				
+				unset($town);
+				unset($county);
+				unset($country);
+				unset($postcode);
+				unset($displayable_address);
+				unset($coordinates);
+				unset($description);
+				unset($num_bedrooms);
+				unset($num_bathrooms);
+				unset($price);
+				unset($property_type);
+				unset($sale_type);
+				$type = "add";
 			}else{
 				$error = 2;
 			}
 		}
-		unset($town);
-		unset($county);
-		unset($country);
-		unset($postcode);
-		unset($displayable_address);
-		unset($coordinates);
-		unset($description);
-		unset($num_bedrooms);
-		unset($num_bathrooms);
-		unset($price);
-		unset($property_type);
-		unset($sale_type);
-		$type = "add";
 	}
 	
 	if($type == "edit"){
@@ -200,13 +230,13 @@
 			if($error == 1){
 				?>
                 	<div class="alert alert-success">
-                      	<strong>Success!</strong>
+                      	<strong>Success!</strong> <?php print $error_msg; ?>
                     </div>
                 <?php
 			}elseif($error == 2){
 				?>
                 	<div class="alert alert-danger">
-                      	<strong>Error!</strong>
+                      	<strong>Error!</strong> <?php print $error_msg; ?>
                     </div>
                 <?php
 			}
