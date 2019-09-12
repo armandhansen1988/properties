@@ -1,0 +1,7 @@
+Options +FollowSymlinks
+RewriteEngine On
+
+RewriteRule ^properties?$ loading/properties.php
+RewriteRule ^remove-property?$ loading/property_delete.php
+RewriteRule ^view-property-([0-9a-zA-Z-]+)$ property_view.php?uuid=$1 [L]
+RewriteRule ^property-([a-z]+)-([0-9a-zA-Z-]+)$ property.php?type=$1&uuid=$2 [L]
